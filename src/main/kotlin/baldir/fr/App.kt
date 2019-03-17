@@ -22,36 +22,37 @@ class App {
 fun main(args: Array<String>) {
     val jsonfileName = args[0]
     val jsonData = File(jsonfileName).readText()
+    val obj = toData(jsonData)
+    File("${obj.display_id}.yml").writeText(toYmlText(obj))
+
+}
+
+fun toData(jsonData: String): Data {
     val json = Json(strictMode = false)
 
     // parsing data back
     val deserializer = Data.serializer()
     val obj = json.parse(deserializer, jsonData)
-    File("${obj.display_id}.yml").writeText(toYml(obj))
-
+    return obj
 }
 
-fun sample(): String {
-    return """{"upload_date": "20181011", "protocol": "https", "creator": null, "series": null, "format_note": "hd720", "chapters": null, "height": 720, "thumbnail": "https://i.ytimg.com/vi/jxBmKvS7lAo/hqdefault.jpg", "like_count": 49, "duration": 9173, "fulltitle": "BDD, DDD, ATDD et TDD expliqu\u00e9s !", "quality": 2, "playlist_index": 1, "view_count": 1931, "playlist": "Uploads from Micha\u00ebl AZERHAD", "start_time": null, "title": "BDD, DDD, ATDD et TDD expliqu\u00e9s !", "_filename": "BDD, DDD, ATDD et TDD expliqu\u00e9s !-jxBmKvS7lAo.mp4", "tags": ["bdd", "tdd", "test-driven development", "clean architecture", "exemples", "meetup", "software craftsmanship", "domain-driven design", "ddd", "behaviour-driven design"], "is_live": null, "id": "jxBmKvS7lAo", "dislike_count": 3, "playlist_id": "UUdcsr2L2WC0OON39Ar3hBKQ", "abr": 192, "uploader_url": "http://www.youtube.com/channel/UCdcsr2L2WC0OON39Ar3hBKQ", "filesize": null, "fps": null, "season_number": null, "annotations": null, "webpage_url_basename": "jxBmKvS7lAo", "acodec": "mp4a.40.2", "display_id": "jxBmKvS7lAo", "asr": 44100, "automatic_captions": {}, "description": "Micha\u00ebl AZERHAD de la soci\u00e9t\u00e9 WealCome est l'invit\u00e9 de Numendo aujourd'hui  !\n\nLes quiproquo, ennemis num\u00e9ro d'un projet informatique !\nComment les identifier ?\nComment les pr\u00e9venir par les biais de conversations et de techniques ?\n\nMicha\u00ebl pr\u00e9sente \u00e0 travers son humour et des exemples pr\u00e9cis les 4 pratiques phares de l'artisanat logiciel et les liens qui les unissent :\nBDD / DDD / ATDD / TDD\n\n\u00c0 voir !\n\nPour d\u00e9couvrir les prestations de WealCome, experte au niveau de toutes ces pratiques : http://wealcomecompany.com", "format": "22 - 1280x720 (hd720)", "track": null, "playlist_uploader": "Micha\u00ebl AZERHAD", "tbr": 593.927, "average_rating": null, "uploader": "Micha\u00ebl AZERHAD", "format_id": "22", "episode_number": null, "subtitles": {}, "uploader_id": "UCdcsr2L2WC0OON39Ar3hBKQ", "categories": ["Education"], "playlist_title": "Uploads from Micha\u00ebl AZERHAD", "alt_title": null}"""
-}
-
-fun toYml(date: Data): String {
+fun toYmlText(data: Data): String {
     val speaker = """speaker:
-    name: ${date.playlist_uploader}
+    name: ${data.playlist_uploader}
 #    twitter: SpeakerTwitterHandle (no @)"""
 
-    var recordingDate = LocalDate.parse(date.upload_date, DateTimeFormatter.ofPattern("yyyyMMdd"))
-    var recordingDateTimestamp = recordingDate.toEpochSecond(LocalTime.NOON, ZoneOffset.UTC)
+    val recordingDate = LocalDate.parse(data.upload_date, DateTimeFormatter.ofPattern("yyyyMMdd"))
+    val recordingDateTimestamp = recordingDate.toEpochSecond(LocalTime.NOON, ZoneOffset.UTC)
     return """
 # Editing guidelines: https://github.com/watch-devtube/contrib/#how-to-edit-video-metadata
 
-${tags(date)}
+${tags(data)}
 $speaker
-title: ${date.fulltitle}
+title: ${data.fulltitle}
 # language: English
 # category: conference # or vlog
 recordingDate: $recordingDateTimestamp
-description: "${date.description.replace("\n", "\\n")}"
+description: "${data.description.replace("\n", "\\n")}"
             """.trimIndent()
 }
 
@@ -68,9 +69,9 @@ $tagsList"""
 data class Data(
         val title: String,
         val fulltitle: String,
-        @Optional val playlist_id: String?=null,
+        @Optional val playlist_id: String? = null,
         val description: String,
-        @Optional val playlist_uploader: String?=null,
+        @Optional val playlist_uploader: String? = null,
         val uploader_id: String,
         val tags: List<String>,
         val upload_date: String,
